@@ -25,9 +25,9 @@ jobs:
       if: github.ref == 'refs/heads/main'
       run: |
         echo "Deploying to Production VM..."
-        ssh -i ~/.ssh/gcp-key admin@${{ secrets.GCP_VM_IP }} << 'EOF'
+        ssh -i ~/.ssh/gcp-key deploy@${{ secrets.GCP_VM_IP }} << 'EOF'
           echo "=== Production Deployment Started ==="
-          cd /home/admin
+          cd /home/deploy
           
           # Create deployment directory if it doesn't exist
           mkdir -p deployment
@@ -53,9 +53,9 @@ jobs:
       if: github.ref == 'refs/heads/stage'
       run: |
         echo "Deploying to Staging VM..."
-        ssh -i ~/.ssh/gcp-key admin@${{ secrets.GCP_VM_IP }} << 'EOF'
+        ssh -i ~/.ssh/gcp-key deploy@${{ secrets.GCP_VM_IP }} << 'EOF'
           echo "=== Staging Deployment Started ==="
-          cd /home/admin
+          cd /home/deploy
           
           # Create staging deployment directory
           mkdir -p staging-deployment
