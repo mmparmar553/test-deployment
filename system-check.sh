@@ -27,6 +27,10 @@ echo "=== Uptime ==="
 uptime
 echo ""
 
+echo "=== Directory Listing (ls -la) ==="
+ls -la
+echo ""
+
 echo "=== Git Deployment Info ==="
 echo "Branch: ${GITHUB_REF#refs/heads/}"
 echo "Commit: ${GITHUB_SHA}"
