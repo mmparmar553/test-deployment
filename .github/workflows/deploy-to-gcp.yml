@@ -14,67 +14,113 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Debug secrets
+      run: |
+        echo "Checking if secrets are available..."
+        echo "SSH key length: ${#GCP_SSH_PRIVATE_KEY}"
+        echo "VM IP: $GCP_VM_IP"
+      env:
+        GCP_SSH_PRIVATE_KEY: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+        GCP_VM_IP: ${{ secrets.GCP_VM_IP }}
+      
     - name: Setup SSH key
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.GCP_SSH_PRIVATE_KEY }}" > ~/.ssh/gcp-key
+        echo "$GCP_SSH_PRIVATE_KEY" > ~/.ssh/gcp-key
         chmod 600 ~/.ssh/gcp-key
-        echo "StrictHostKeyChecking no" >> ~/.ssh/config
-        echo "UserKnownHostsFile /dev/null" >> ~/.ssh/config
+        
+        # Create SSH config to bypass host checking
+        cat > ~/.ssh/config << EOF
+        Host $GCP_VM_IP
+          HostName $GCP_VM_IP
+          User deploy
+          IdentityFile ~/.ssh/gcp-key
+          StrictHostKeyChecking no
+          UserKnownHostsFile /dev/null
+        EOF
+        
+        # Test SSH connection
+        echo "Testing SSH connection..."
+        ssh -o ConnectTimeout=10 $GCP_VM_IP "echo 'SSH connection successful!'"
+      env:
+        GCP_SSH_PRIVATE_KEY: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+        GCP_VM_IP: ${{ secrets.GCP_VM_IP }}
         
     - name: Deploy to Production VM (main branch)
       if: github.ref == 'refs/heads/main'
       run: |
-        echo "Deploying to Production VM..."
-        ssh -i ~/.ssh/gcp-key deploy@${{ secrets.GCP_VM_IP }} << 'EOF'
+        echo "🚀 Deploying to Production VM..."
+        ssh $GCP_VM_IP << 'EOF'
           echo "=== Production Deployment Started ==="
-          cd /home/deploy
+          echo "Current user: $(whoami)"
+          echo "Current directory: $(pwd)"
           
-          # Create deployment directory if it doesn't exist
+          # Navigate to deployment directory
+          cd /home/deploy
           mkdir -p deployment
           cd deployment
           
           # Clone or update repository
           if [ -d "test-deployment" ]; then
+            echo "Updating existing repository..."
             cd test-deployment
             git pull origin main
           else
+            echo "Cloning repository..."
             git clone https://github.com/mmparmar553/test-deployment.git
             cd test-deployment
           fi
           
+          # Show current files
+          echo "Files in deployment:"
+          ls -la
+          
           # Make script executable and run it
           chmod +x system-check.sh
+          echo "Running system check..."
           ./system-check.sh
           
           echo "=== Production Deployment Complete ==="
         EOF
+      env:
+        GCP_VM_IP: ${{ secrets.GCP_VM_IP }}
         
     - name: Deploy to Staging VM (stage branch)
       if: github.ref == 'refs/heads/stage'
       run: |
-        echo "Deploying to Staging VM..."
-        ssh -i ~/.ssh/gcp-key deploy@${{ secrets.GCP_VM_IP }} << 'EOF'
+        echo "🚀 Deploying to Staging VM..."
+        ssh $GCP_VM_IP << 'EOF'
           echo "=== Staging Deployment Started ==="
-          cd /home/deploy
+          echo "Current user: $(whoami)"
+          echo "Current directory: $(pwd)"
           
-          # Create staging deployment directory
+          # Navigate to staging directory
+          cd /home/deploy
           mkdir -p staging-deployment
           cd staging-deployment
           
           # Clone or update repository
           if [ -d "test-deployment" ]; then
+            echo "Updating existing repository..."
             cd test-deployment
             git pull origin stage
           else
+            echo "Cloning repository..."
             git clone https://github.com/mmparmar553/test-deployment.git
             cd test-deployment
             git checkout stage
           fi
           
+          # Show current files
+          echo "Files in staging deployment:"
+          ls -la
+          
           # Make script executable and run it
           chmod +x system-check.sh
+          echo "Running system check..."
           ./system-check.sh
           
           echo "=== Staging Deployment Complete ==="
         EOF
+      env:
+        GCP_VM_IP: ${{ secrets.GCP_VM_IP }}
