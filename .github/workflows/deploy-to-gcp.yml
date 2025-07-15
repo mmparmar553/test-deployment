@@ -19,7 +19,11 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.GCP_SSH_PRIVATE_KEY }}" > ~/.ssh/gcp-key
         chmod 600 ~/.ssh/gcp-key
-        ssh-keyscan -H ${{ secrets.GCP_VM_IP }} >> ~/.ssh/known_hosts
+        echo "Setting up known_hosts for VM IP: ${{ secrets.GCP_VM_IP }}"
+        ssh-keyscan -H ${{ secrets.GCP_VM_IP }} >> ~/.ssh/known_hosts 2>/dev/null || {
+          echo "ssh-keyscan failed, adding manual host key"
+          echo "|1|Vp228xAHOyCg2KIR1HDVPMdWoLA=|qoE8Zo0S/7jx6ln6QDMYuIOmSqA= ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOWbTpAK+gbH5bXcTIjovlAE1s3g4/TWY15m4BRzK2Wi" >> ~/.ssh/known_hosts
+        }
         
     - name: Deploy to Production VM (main branch)
       if: github.ref == 'refs/heads/main'
