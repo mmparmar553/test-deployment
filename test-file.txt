@@ -1,0 +1,11 @@
+AUTO DEPLOYMENT TEST
+===================
+
+This file was created to test the GitHub Actions auto deployment.
+
+Test Details:
+- Date: $(date)
+- Branch: main
+- Purpose: Verify auto deployment pipeline
+
+If you see this file on the GCP VM, the deployment worked!

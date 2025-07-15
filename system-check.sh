@@ -1,9 +1,10 @@
 #!/bin/bash
 
-echo "=== System Check Script ==="
+echo "=== System Check Script - AUTO DEPLOYMENT TEST ==="
 echo "Timestamp: $(date)"
 echo "Hostname: $(hostname)"
 echo "User: $(whoami)"
+echo "Test Run: #$(date +%s)"
 echo ""
 
 echo "=== Disk Usage (df -k) ==="
